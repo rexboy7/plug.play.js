@@ -9,6 +9,7 @@
   var imagePlayer;
   var currentPlayer;
   var playerToggler;
+  var folderList;
 
   function debugLog(msg) {
     var logEl = document.createElement('div');
@@ -132,7 +133,7 @@
             sublist.appendChild(newElem);
           }
           if (!folderElement) {
-            document.getElementById('folderlist').appendChild(sublist);
+            folderList.appendChild(sublist);
           } else {
             folderElement.parentElement.
                 insertBefore(sublist, folderElement.nextSibling);
@@ -181,7 +182,13 @@
 
       });
 
-      browseFolder(service.id);
+      var serverElem = document.createElement('div');
+      serverElem.className = 'server';
+      serverElem.textContent = mediaServer.configDocument.
+        getElementsByTagName('friendlyName')[0].textContent;
+      folderList.appendChild(serverElem);
+
+      browseFolder(service.id, null, serverElem);
 
     }
   }
@@ -190,6 +197,7 @@
     var audioToggler = document.getElementById('audioToggler');
     var videoToggler = document.getElementById('videoToggler');
     var imageToggler = document.getElementById('imageToggler');
+    folderList = document.getElementById('folderList');
     debugEl = document.getElementById('debug');
     audioPlayer = document.getElementById('audioPlayer');
     videoPlayer = document.getElementById('videoPlayer');
