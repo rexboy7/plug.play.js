@@ -84,69 +84,68 @@
     folderId = folderId || '';
 
     mediaServer.browse(folderId).then(function(response) {
-
-      if (response && response.data) {
-        var data = response.data.Result;
-        if (data.indexOf('xmlns:dlna') == -1) {
-          data = data.replace('<DIDL-Lite ',
-            '<DIDL-Lite xmlns:dlna="urn:schemas-dlna-org:device-1-0" ');
-        }
-        var parser = new DOMParser();
-        var serializer = new XMLSerializer();
-        var xmlResponse = parser.parseFromString(data, 'application/xml');
-        var lists = xmlResponse.documentElement.children;
-
-        var sublist = document.createElement('div');
-        sublist.className = 'sublist';
-
-        for (var i = 0; i < lists.length; i++) {
-          var item = lists[i];
-
-          var titleElem = item.getElementsByTagName('title')[0];
-          var title;
-          if (titleElem) {
-            title = titleElem.textContent;
-          }
-
-          var newElem;
-          if (item.tagName == 'container') {
-            newElem = document.createElement('a');
-
-            newElem.dataset.serviceId = serviceId;
-            newElem.addEventListener('click', toggleFolder);
-            newElem.href = '#' + item.getAttribute('id');
-            newElem.textContent = title;
-            newElem.className = 'folder';
-
-            sublist.appendChild(newElem);
-          } else if (item.tagName == 'item') {
-            var linkElem = item.getElementsByTagName('res')[0];
-            var link, mime;
-            if (linkElem) {
-              link = linkElem.textContent;
-              mime = linkElem.getAttribute('protocolInfo').split(':')[2];
-            }
-            newElem = document.createElement('a');
-            newElem.addEventListener('click', playFile);
-            newElem.dataset.mime = mime;
-            newElem.href = link;
-            newElem.textContent = title;
-            newElem.className = mime.split('/')[0];
-            sublist.appendChild(newElem);
-          }
-          if (!folderElement) {
-            folderList.appendChild(sublist);
-          } else {
-            folderElement.parentElement.
-                insertBefore(sublist, folderElement.nextSibling);
-          }
-
-        }
-
-
-        debugLog(serializer.serializeToString(xmlResponse));
+      if (!response || !response.data) {
+        return;
       }
 
+
+      var data = response.data.Result;
+      if (data.indexOf('xmlns:dlna') == -1) {
+        data = data.replace('<DIDL-Lite ',
+          '<DIDL-Lite xmlns:dlna="urn:schemas-dlna-org:device-1-0" ');
+      }
+      var parser = new DOMParser();
+      var serializer = new XMLSerializer();
+      var xmlResponse = parser.parseFromString(data, 'application/xml');
+      var lists = xmlResponse.documentElement.children;
+
+      var sublist = document.createElement('div');
+      sublist.className = 'sublist';
+
+      for (var i = 0; i < lists.length; i++) {
+        var item = lists[i];
+
+        var titleElem = item.getElementsByTagName('title')[0];
+        var title;
+        if (titleElem) {
+          title = titleElem.textContent;
+        }
+
+        var newElem;
+        if (item.tagName == 'container') {
+          newElem = document.createElement('a');
+
+          newElem.dataset.serviceId = serviceId;
+          newElem.addEventListener('click', toggleFolder);
+          newElem.href = '#' + item.getAttribute('id');
+          newElem.textContent = title;
+          newElem.className = 'folder';
+
+          sublist.appendChild(newElem);
+        } else if (item.tagName == 'item') {
+          var linkElem = item.getElementsByTagName('res')[0];
+          var link, mime;
+          if (linkElem) {
+            link = linkElem.textContent;
+            mime = linkElem.getAttribute('protocolInfo').split(':')[2];
+          }
+          newElem = document.createElement('a');
+          newElem.addEventListener('click', playFile);
+          newElem.dataset.mime = mime;
+          newElem.href = link;
+          newElem.textContent = title;
+          newElem.className = mime.split('/')[0];
+          sublist.appendChild(newElem);
+        }
+      }
+      if (!folderElement) {
+        folderList.appendChild(sublist);
+      } else {
+        folderElement.parentElement.
+            insertBefore(sublist, folderElement.nextSibling);
+      }
+
+      debugLog(serializer.serializeToString(xmlResponse));
     });
   }
 
