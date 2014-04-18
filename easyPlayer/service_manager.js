@@ -24,9 +24,11 @@
     if (elem.nextSibling && elem.nextSibling.tagName == 'DIV') {
       // folder is opened. Close it.
       elem.parentElement.removeChild(elem.nextSibling);
+      elem.classList.remove('opened');
     } else {
       // folder is closed. Open it.
       debugLog(elem.serviceId);
+      elem.classList.add('opened');
       browseFolder(
         elem.dataset.serviceId, elem.hash.substr(1), evt.target);
     }
