@@ -1,4 +1,5 @@
 (function(exports) {
+  var DEBUG = false;
   'use strict';
 
   var savedServices = {};
@@ -7,11 +8,15 @@
   var audioPlayer;
   var videoPlayer;
   var imagePlayer;
+  var discoverButton;
   var currentPlayer;
   var playerToggler;
   var folderList;
 
-  function debugLog(msg) {
+  function debugLog(msg, level) {
+    if (!DEBUG && level == 'debug') {
+      return;
+    }
     var logEl = document.createElement('div');
     logEl.textContent = msg;
     debugEl.appendChild(logEl);
@@ -27,7 +32,7 @@
       elem.classList.remove('opened');
     } else {
       // folder is closed. Open it.
-      debugLog(elem.serviceId);
+      debugLog(elem.serviceId, 'debug');
       elem.classList.add('opened');
       browseFolder(
         elem.dataset.serviceId, elem.hash.substr(1), evt.target);
@@ -145,7 +150,7 @@
             insertBefore(sublist, folderElement.nextSibling);
       }
 
-      debugLog(serializer.serializeToString(xmlResponse));
+      debugLog(serializer.serializeToString(xmlResponse), 'debug');
     });
   }
 
@@ -162,6 +167,9 @@
     for (var i = 0; i < services.length; i++) {
       var service = services[i];
       service._index = i;
+      if (savedServices[service.id]) {
+        continue;
+      }
 
       var mediaServer =
         new Plug.UPnP_ContentDirectory(service, { debug: false });
@@ -194,25 +202,7 @@
     }
   }
 
-  function init() {
-    var audioToggler = document.getElementById('audioToggler');
-    var videoToggler = document.getElementById('videoToggler');
-    var imageToggler = document.getElementById('imageToggler');
-    folderList = document.getElementById('folderList');
-    debugEl = document.getElementById('debug');
-    audioPlayer = document.getElementById('audioPlayer');
-    videoPlayer = document.getElementById('videoPlayer');
-    imagePlayer = document.getElementById('imagePlayer');
-    playerToggler = document.getElementById('playerToggler');
-
-    currentPlayer = imagePlayer;
-    togglePlayer(false);
-
-    playerToggler.addEventListener('click', togglePlayer);
-    audioToggler.addEventListener('click', switchPlayer.bind(null, 'audio'));
-    videoToggler.addEventListener('click', switchPlayer.bind(null, 'video'));
-    imageToggler.addEventListener('click', switchPlayer.bind(null, 'image'));
-
+  function discover() {
     if (navigator.getNetworkServices) {
       debugLog('Searching for UPnP services in the current network...');
       navigator.getNetworkServices(
@@ -227,6 +217,31 @@
           'navigator.getNetworkServices API is not supported in this browser');
     }
   }
+
+  function init() {
+    var audioToggler = document.getElementById('audioToggler');
+    var videoToggler = document.getElementById('videoToggler');
+    var imageToggler = document.getElementById('imageToggler');
+    folderList = document.getElementById('folderList');
+    debugEl = document.getElementById('debug');
+    audioPlayer = document.getElementById('audioPlayer');
+    videoPlayer = document.getElementById('videoPlayer');
+    imagePlayer = document.getElementById('imagePlayer');
+    playerToggler = document.getElementById('playerToggler');
+    discoverButton = document.getElementById('discoverButton');
+
+    currentPlayer = imagePlayer;
+    togglePlayer(false);
+
+    playerToggler.addEventListener('click', togglePlayer);
+    audioToggler.addEventListener('click', switchPlayer.bind(null, 'audio'));
+    videoToggler.addEventListener('click', switchPlayer.bind(null, 'video'));
+    imageToggler.addEventListener('click', switchPlayer.bind(null, 'image'));
+    discoverButton.addEventListener('click', discover);
+
+    discover();
+  }
+
   window.addEventListener('load', function() {
     init();
   });
