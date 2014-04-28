@@ -8,7 +8,7 @@
     font: small monospace;
     color: black;
   }
-  .audio, .video, .image, .server, .folder, #folderlist a {
+  .audio, .video, .image, .unknown, .server, .folder, #folderlist a {
     display: block;
     padding-top: 3px;
     padding-left: 20px;
@@ -34,6 +34,10 @@
   .image {
     color: #00CC66;
     background: url(image/icon_image.png) left center no-repeat;
+  }
+  .unknown {
+    color: #00CC66;
+    background: url(image/icon_unknown.png) left center no-repeat;
   }
   .server {
     background: url(image/icon_server.png) left center no-repeat;

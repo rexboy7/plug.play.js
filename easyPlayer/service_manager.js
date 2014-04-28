@@ -8,6 +8,7 @@
   var audioPlayer;
   var videoPlayer;
   var imagePlayer;
+  var unknownPlayer;
   var discoverButton;
   var currentPlayer;
   var playerToggler;
@@ -46,6 +47,7 @@
     audioPlayer.classList.add('hide');
     videoPlayer.classList.add('hide');
     imagePlayer.classList.add('hide');
+    unknownPlayer.classList.add('hide');
     if (value) {
       currentPlayer.classList.remove('hide');
     }
@@ -58,17 +60,19 @@
       currentPlayer = videoPlayer;
     } else if (type == 'image') {
       currentPlayer = imagePlayer;
+    } else if (type == 'unknown') {
+      currentPlayer = unknownPlayer;
     }
     togglePlayer(true);
   }
 
   function playFile(evt) {
     evt.preventDefault();
-    var fileType = evt.target.dataset.mime.split('/')[0].toLowerCase();
+    var fileType = evt.target.dataset.type;
     var fileFormat = evt.target.dataset.mime.split('/')[1].toLowerCase();
     if (fileFormat == 'mpeg' || fileFormat == 'mp4') {
-      window.open(evt.target.href, 'mpegPopup');
-      return;
+      // Workaround for mp4 is not supported by opera
+      fileType = 'unknown';
     }
 
     switchPlayer(fileType);
@@ -78,6 +82,27 @@
     currentPlayer.oncanplay = function() {
       this.play();
     };
+  }
+
+  function detectTypeByMime(mimeText) {
+    var type = mimeText.split('/')[0];
+    var format = mimeText.split('/')[1];
+    switch (type) {
+      case 'audio':
+      case 'video':
+      case 'image':
+        return type;
+      case 'application':
+        switch (format) {
+          case 'ogg':
+            return 'video';
+          case 'octet-stream':
+            return 'unknown';
+        }
+        break;
+      default:
+        return 'unknown';
+    }
   }
 
   function browseFolder(serviceId, folderId, folderElement) {
@@ -134,12 +159,14 @@
             link = linkElem.textContent;
             mime = linkElem.getAttribute('protocolInfo').split(':')[2];
           }
+          var fileType = detectTypeByMime(mime);
           newElem = document.createElement('a');
           newElem.addEventListener('click', playFile);
           newElem.dataset.mime = mime;
+          newElem.dataset.type = fileType;
           newElem.href = link;
           newElem.textContent = title;
-          newElem.className = mime.split('/')[0];
+          newElem.className = fileType;
           sublist.appendChild(newElem);
         }
       }
@@ -228,6 +255,7 @@
     videoPlayer = document.getElementById('videoPlayer');
     imagePlayer = document.getElementById('imagePlayer');
     playerToggler = document.getElementById('playerToggler');
+    unknownPlayer = document.getElementById('unknownPlayer');
     discoverButton = document.getElementById('discoverButton');
 
     currentPlayer = imagePlayer;
@@ -237,6 +265,7 @@
     audioToggler.addEventListener('click', switchPlayer.bind(null, 'audio'));
     videoToggler.addEventListener('click', switchPlayer.bind(null, 'video'));
     imageToggler.addEventListener('click', switchPlayer.bind(null, 'image'));
+    unknownToggler.addEventListener('click', switchPlayer.bind(null, 'unknown'));
     discoverButton.addEventListener('click', discover);
 
     discover();
