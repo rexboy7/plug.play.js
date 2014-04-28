@@ -181,17 +181,36 @@
     });
   }
 
+  function remove(serviceId) {
+    delete savedServices[serviceId];
+    var element = document.querySelector(
+      '.server[data-service-id="' + serviceId + '"]');
+    if (element.nextElementSibling.classList.contains('sublist')) {
+      element.parentElement.removeChild(element.nextElementSibling);
+    }
+    element.parentElement.removeChild(element);
+  }
+
   function onServices(services) {
 
     debugLog(services.length + ' service' +
     (services.length !== 1 ? 's' : '') +
     ' found in the current network');
 
-    if (services.length === 0) {
-      return;
+    for (savedServiceId in savedServices) {
+      var removed = true;
+      for (i = 0; i < services.length; i++) {
+        if (services[i].id == savedServiceId) {
+          removed = false;
+          break;
+        }
+      }
+      if (removed) {
+        remove(savedServiceId);
+      }
     }
 
-    for (var i = 0; i < services.length; i++) {
+    for (i = 0; i < services.length; i++) {
       var service = services[i];
       service._index = i;
       if (savedServices[service.id]) {
@@ -222,6 +241,7 @@
       serverElem.className = 'server';
       serverElem.textContent = mediaServer.configDocument.
         getElementsByTagName('friendlyName')[0].textContent;
+      serverElem.dataset.serviceId = service.id;
       folderList.appendChild(serverElem);
 
       browseFolder(service.id, null, serverElem);
@@ -265,7 +285,8 @@
     audioToggler.addEventListener('click', switchPlayer.bind(null, 'audio'));
     videoToggler.addEventListener('click', switchPlayer.bind(null, 'video'));
     imageToggler.addEventListener('click', switchPlayer.bind(null, 'image'));
-    unknownToggler.addEventListener('click', switchPlayer.bind(null, 'unknown'));
+    unknownToggler.addEventListener(
+                                'click', switchPlayer.bind(null, 'unknown'));
     discoverButton.addEventListener('click', discover);
 
     discover();
