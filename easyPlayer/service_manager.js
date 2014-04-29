@@ -182,13 +182,33 @@
   }
 
   function remove(serviceId) {
+    var serverItem = savedServices[serviceId].serverItem;
+    removeSiblingList(serverItem);
+    serverItem.parentElement.removeChild(serverItem);
     delete savedServices[serviceId];
-    var element = document.querySelector(
-      '.server[data-service-id="' + serviceId + '"]');
-    if (element.nextElementSibling.classList.contains('sublist')) {
-      element.parentElement.removeChild(element.nextElementSibling);
+  }
+
+  function removeSiblingList(elem) {
+    if (elem.nextElementSibling.classList.contains('sublist')) {
+      elem.parentElement.removeChild(elem.nextElementSibling);
     }
-    element.parentElement.removeChild(element);
+  }
+
+  function refresh(evt) {
+    var serverItem = evt.target;
+    var serviceId = serverItem.dataset.serviceId;
+    serverItem.removeEventListener('click', refresh);
+    serverItem.classList.remove('needRefresh');
+
+    var service = savedServices[serviceId];
+    removeSiblingList(service.serverItem);
+    browseFolder(serviceId, null, service.serverItem);
+  }
+
+  function addRefreshLink(serviceId) {
+    var serverItem = savedServices[serviceId].serverItem;
+    serverItem.classList.add('needRefresh');
+    serverItem.addEventListener('click', refresh);
   }
 
   function onServices(services) {
@@ -213,39 +233,40 @@
     for (i = 0; i < services.length; i++) {
       var service = services[i];
       service._index = i;
-      if (savedServices[service.id]) {
-        continue;
-      }
 
       var mediaServer =
         new Plug.UPnP_ContentDirectory(service, { debug: false });
+
       if (!savedServices[service.id]) {
         savedServices[service.id] = mediaServer;
+
+        // Add server node
+        var serverItem = document.createElement('div');
+        serverItem.className = 'server';
+        serverItem.textContent = mediaServer.configDocument.
+          getElementsByTagName('friendlyName')[0].textContent;
+        serverItem.dataset.serviceId = service.id;
+        folderList.appendChild(serverItem);
+
+        mediaServer.serverItem = serverItem;
+
+        browseFolder(service.id, null, serverItem);
       }
 
       mediaServer.getSystemUpdateId().then(function(response) {
         if (response && response.data) {
           debugLog('Service[' + service._index + '] is reporting UpdateId=[' +
             response.data.Id + ']');
+          if (savedServices[service.id].updateId != response.data.Id) {
+            addRefreshLink(service.id);
+            savedServices[service.id].updateId = response.data.Id;
+          }
         } else {
           debugLog('Service[' + service._index + '] is reporting no response');
         }
-
       }).then(null, function(error) { // Handle any errors
-
         debugLog('An error occurred: ' + error.description);
-
       });
-
-      var serverElem = document.createElement('div');
-      serverElem.className = 'server';
-      serverElem.textContent = mediaServer.configDocument.
-        getElementsByTagName('friendlyName')[0].textContent;
-      serverElem.dataset.serviceId = service.id;
-      folderList.appendChild(serverElem);
-
-      browseFolder(service.id, null, serverElem);
-
     }
   }
 

@@ -65,3 +65,8 @@
   .hide {
     display: none;
   }
+  .needRefresh {
+    cursor: hand;
+    padding-left: 40px;
+    color: #00CC66;
+  }
